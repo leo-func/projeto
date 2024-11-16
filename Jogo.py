@@ -43,6 +43,11 @@ ball_y = screen_height - 50
 opacity = 255  # Inicializa a opacidade do texto "Perfeito!" para visível
 fade_time = 0  # Tempo para o fade-out
 fade_duration = 60  # Duração do fade-out (em iterações)
+total_game_time = 60
+game_timer = total_game_time
+clock = pygame.time.Clock()
+
+
 
 # Variáveis de controle de erros
 max_errors = 3
@@ -109,15 +114,16 @@ def draw_game_over():
 
 # Função para reiniciar o jogo
 def reset_game():
-    global score, time_left, input_answer, errors, game_over, balls, ball_x, fade_time
+    global score, time_left, input_answer, errors, game_over, balls, ball_x, fade_time, game_timer, total_game_time
     score = 0
     time_left = max_time
     input_answer = ""
-    errors = 0
+    errors = 0 
     balls.clear()  # Limpa a lista de bolas
     ball_x = 0  # Reseta o valor de ball_x para 0 quando o jogo reiniciar
     fade_time = 0  # Reseta o tempo do fade para 0
-    game_over = False
+    game_over = False # Tela de game over desativada
+    game_timer = total_game_time # Reseta o tempo para o valor padrão
     generate_calculation()  # Gera um novo cálculo ao reiniciar o jogo
 
 # Função para desenhar as bolas de erro
@@ -157,10 +163,16 @@ countdown()
 game_started = True  # Marca que o jogo foi iniciado
 generate_calculation()
 
+def format_time(seconds):
+    minutes = int(seconds // 60)
+    seconds = int(seconds % 60)
+    return f"{minutes}:{seconds:02d}"
+
 # Loop principal do jogo
 running = True
 while running:
     screen.fill(WHITE)  # Limpa a tela a cada iteração do loop
+    delta_time = clock.tick(60) / 1000.0
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -181,7 +193,7 @@ while running:
                         if int(input_answer) == correct_answer:
                             if time_left > max_time / 2:
                                 score += 15
-                                perfect_text = font.render("Perfeito!", True, BLACK)
+                                perfect_text = font.render("Perfeito!", True, GREEN)
                                 good_text = None
                                 bad_text = None
 
@@ -192,7 +204,7 @@ while running:
                                 print("Perfeito!")
                             elif time_left > max_time / 4:
                                 score += 10
-                                good_text = font.render("Bom!", True, BLACK)
+                                good_text = font.render("Bom!", True, SKY_BLUE)
                                 perfect_text = None
                                 bad_text = None
                                 fade_time = fade_duration
@@ -226,6 +238,10 @@ while running:
                         input_answer += event.unicode
 
     if not game_over:
+        if game_timer > 0:
+            game_timer -= delta_time
+        else:
+            game_over = True
         if time_left > 0:
             time_left -= time_decrease_rate
         else:
@@ -253,6 +269,10 @@ while running:
         # Fade
         apply_opacity()
 
+        # Exibir o tempo restante global no formato "0:00"
+        formatted_timer = format_time(game_timer)
+        timer_text = small_font.render(f"Tempo restante: {formatted_timer}", True, BLACK)
+        screen.blit(timer_text, (screen_width - timer_text.get_width() - 10, 10))
 
     # Atualizar a tela
     pygame.display.flip()
