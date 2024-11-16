@@ -45,6 +45,9 @@ fade_time = 0  # Tempo para o fade-out
 fade_duration = 60  # Duração do fade-out (em iterações)
 total_game_time = 60
 game_timer = total_game_time
+perfect_counter = 0
+good_counter = 0
+bad_counter = 0
 coins = 0
 clock = pygame.time.Clock()
 
@@ -115,7 +118,7 @@ def draw_game_over():
 
 # Função para reiniciar o jogo
 def reset_game():
-    global score, time_left, input_answer, errors, game_over, balls, ball_x, fade_time, game_timer, total_game_time, coins
+    global score, time_left, input_answer, errors, game_over, balls, ball_x, fade_time, game_timer, total_game_time, coins, perfect_counter, good_counter, bad_counter
     score = 0
     time_left = max_time
     input_answer = ""
@@ -126,6 +129,9 @@ def reset_game():
     game_over = False # Tela de game over desativada
     game_timer = total_game_time # Reseta o tempo para o valor padrão
     coins = 0
+    perfect_counter = 0
+    good_counter = 0
+    bad_counter = 0
     generate_calculation()  # Gera um novo cálculo ao reiniciar o jogo
 
 # Função para converter pontuação em score
@@ -171,6 +177,18 @@ def apply_opacity():
     else:
         fade_time = 0
 
+# Função para contar a precisão
+def estimate_accuracy():
+    total_answers = perfect_counter + good_counter + bad_counter + errors
+    
+    if total_answers > 0:
+        accuracy = ((perfect_counter * 1.0) + (good_counter * 0.75) + (bad_counter * 0.5)) / total_answers * 100
+    else:
+        accuracy = 0
+    return accuracy
+
+
+
 # Chama a contagem regressiva antes do início do jogo
 countdown()
 game_started = True  # Marca que o jogo foi iniciado
@@ -209,6 +227,7 @@ while running:
                                 perfect_text = font.render("Perfeito!", True, GREEN)
                                 good_text = None
                                 bad_text = None
+                                perfect_counter += 1
 
                                 # Fade-in (já está visível) e fade-out controlados pelo tempo
                                 fade_time = fade_duration  # Define o tempo máximo para o fade
@@ -222,6 +241,7 @@ while running:
                                 bad_text = None
                                 fade_time = fade_duration
                                 opacity = 255
+                                good_counter += 1
                                 print("Bom!")
                             else:
                                 score += 5
@@ -230,6 +250,7 @@ while running:
                                 good_text = None
                                 fade_time = fade_duration
                                 opacity = 255
+                                bad_counter += 1
                                 print("Ruim!")
 
                         else:
@@ -269,6 +290,8 @@ while running:
 
     if game_over:
         draw_game_over()
+        acurracy = estimate_accuracy()
+        print(f"{acurracy:.2f}%")
     else:
         # Desenhar barra de tempo
         draw_timer_bar()
