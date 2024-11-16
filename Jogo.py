@@ -45,6 +45,7 @@ fade_time = 0  # Tempo para o fade-out
 fade_duration = 60  # Duração do fade-out (em iterações)
 total_game_time = 60
 game_timer = total_game_time
+coins = 0
 clock = pygame.time.Clock()
 
 
@@ -114,7 +115,7 @@ def draw_game_over():
 
 # Função para reiniciar o jogo
 def reset_game():
-    global score, time_left, input_answer, errors, game_over, balls, ball_x, fade_time, game_timer, total_game_time
+    global score, time_left, input_answer, errors, game_over, balls, ball_x, fade_time, game_timer, total_game_time, coins
     score = 0
     time_left = max_time
     input_answer = ""
@@ -124,7 +125,19 @@ def reset_game():
     fade_time = 0  # Reseta o tempo do fade para 0
     game_over = False # Tela de game over desativada
     game_timer = total_game_time # Reseta o tempo para o valor padrão
+    coins = 0
     generate_calculation()  # Gera um novo cálculo ao reiniciar o jogo
+
+# Função para converter pontuação em score
+def coin_counter():
+    global coins
+    coins = score // 2
+    print(coins)
+
+# Função para desenhar as moedas
+def draw_coin_counter():
+    coin_text = small_font.render(f"Moedas: {coins}", True, BLACK)
+    screen.blit(coin_text, (10, 50))
 
 # Função para desenhar as bolas de erro
 def draw_balls():
@@ -262,6 +275,10 @@ while running:
 
         # Desenhar cálculo e pontuação
         draw_calculation()
+        coin_counter() 
+
+        # Desenhar moedas
+        draw_coin_counter()
 
         # Desenhar as bolas
         draw_balls()
