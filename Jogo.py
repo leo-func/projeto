@@ -180,9 +180,13 @@ def apply_opacity():
 # Função para contar a precisão
 def estimate_accuracy():
     total_answers = perfect_counter + good_counter + bad_counter + errors
+    penalty_factor = 5
     
+
     if total_answers > 0:
         accuracy = ((perfect_counter * 1.0) + (good_counter * 0.75) + (bad_counter * 0.5)) / total_answers * 100
+        accuracy -= errors * penalty_factor
+        acurracy = max(acurracy, 0)
     else:
         accuracy = 0
     return accuracy
