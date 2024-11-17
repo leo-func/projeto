@@ -108,10 +108,66 @@ def draw_calculation():
     input_text = small_font.render(f"Sua resposta: {input_answer}", True, BLACK)
     screen.blit(input_text, (screen_width // 2 - input_text.get_width() // 2, screen_height // 2 + 50))
 
+# Função para analisar rank
+def rank():
+    temp = []
+    if accuracy == 100:
+        print("A")
+        temp.append('A')
+    elif 95 <= accuracy <= 99.99:
+        print("B")
+        temp.append('B')
+    elif 85 <= accuracy <= 94.99:
+        print("C")
+        temp.append('C')
+    elif 70 <= accuracy <= 84.99:
+        print("D")
+        temp.append('D')
+    elif 50 <= accuracy <= 69.99:
+        print("E")
+        temp.append('E')
+    elif 0 <= accuracy <= 49.99:
+        print("F")
+        temp.append('F')
+    
+    convert = ''.join(temp)
+    return convert
+
+
+
 # Função para desenhar a tela de Game Over
 def draw_game_over():
     game_over_text = font.render("Game Over", True, RED)
-    screen.blit(game_over_text, (screen_width // 2 - game_over_text.get_width() // 2, screen_height // 2 - 50))
+    screen.blit(game_over_text, (screen_width // 2 - game_over_text.get_width() // 2, screen_height // 2 - 100))
+
+    ranked = rank()
+
+    rank_text = small_font.render(f"Rank: {ranked} ", True, RED)
+    screen.blit(rank_text, (screen_width // 2 - rank_text.get_width() // 2, 10))
+
+    text_lines = [
+        f"Perfeito: {perfect_counter}x",
+        f"Bom: {good_counter}x",
+        f"Ruim: {bad_counter}x"
+    ]
+
+    # Calcular a altura total do bloco de texto
+    total_text_height = len(text_lines) * small_font.get_linesize()
+
+    # Posição inicial do bloco (centralizado verticalmente)
+    start_y = (screen_height - total_text_height) // 2
+    
+
+    for line in text_lines:
+        # Renderiza o texto atual
+        accuracy_text = small_font.render(line, True, BLACK)
+        # Calcula a posição horizontal para centralizar cada linha
+        text_x = (screen_width - accuracy_text.get_width()) // 2
+        # Blita o texto na posição centralizada
+        screen.blit(accuracy_text, (text_x, start_y))
+        # Avança para a próxima linha
+        start_y += small_font.get_linesize()
+
     
     retry_text = small_font.render("Pressione 'R' para jogar novamente ou 'Q' para sair", True, BLACK)
     screen.blit(retry_text, (screen_width // 2 - retry_text.get_width() // 2, screen_height // 2 + 50))
@@ -134,16 +190,17 @@ def reset_game():
     bad_counter = 0
     generate_calculation()  # Gera um novo cálculo ao reiniciar o jogo
 
-# Função para converter pontuação em score
+# Função para converter pontuação em moedas
 def coin_counter():
     global coins
     coins = score // 2
     print(coins)
 
-# Função para desenhar as moedas
-def draw_coin_counter():
-    coin_text = small_font.render(f"Moedas: {coins}", True, BLACK)
-    screen.blit(coin_text, (10, 50))
+# Função para desenhar a precisão
+def draw_accuracy():
+    acurracy = estimate_accuracy()
+    acurracy_text = small_font.render(f"{acurracy:.2f} %", True, BLACK)
+    screen.blit(acurracy_text, (10, 50))
 
 # Função para desenhar as bolas de erro
 def draw_balls():
@@ -182,11 +239,12 @@ def estimate_accuracy():
     total_answers = perfect_counter + good_counter + bad_counter + errors
     penalty_factor = 5
     
+    global accuracy
 
     if total_answers > 0:
         accuracy = ((perfect_counter * 1.0) + (good_counter * 0.75) + (bad_counter * 0.5)) / total_answers * 100
         accuracy -= errors * penalty_factor
-        acurracy = max(acurracy, 0)
+        accuracy = max(accuracy, 0)
     else:
         accuracy = 0
     return accuracy
@@ -294,8 +352,8 @@ while running:
 
     if game_over:
         draw_game_over()
-        acurracy = estimate_accuracy()
-        print(f"{acurracy:.2f}%")
+        rank()
+        
     else:
         # Desenhar barra de tempo
         draw_timer_bar()
@@ -305,7 +363,7 @@ while running:
         coin_counter() 
 
         # Desenhar moedas
-        draw_coin_counter()
+        draw_accuracy()
 
         # Desenhar as bolas
         draw_balls()
