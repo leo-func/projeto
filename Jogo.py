@@ -50,7 +50,14 @@ good_counter = 0
 bad_counter = 0
 coins = 0
 clock = pygame.time.Clock()
+in_menu = True
+countdown_active = False
 
+# Botões
+
+button_start = pygame.Rect(screen_width // 2 - 100, 200, 200, 50)  # Botão "Iniciar Jogo"
+button_instructions = pygame.Rect(screen_width // 2 - 100, 300, 200, 50)  # Botão "Instruções"
+button_quit = pygame.Rect(screen_width // 2 - 100, 400, 200, 50)  # Botão "Sair"
 
 
 # Variáveis de controle de erros
@@ -62,8 +69,60 @@ balls = []  # Lista para armazenar as posições das bolas
 game_started = False
 game_over = False
 
+# Desenhar menu
+
+def draw_menu():
+    screen.fill(WHITE)
+    
+    # Título
+    title_text = font.render("Bem-vindo ao Jogo!", True, BLACK)
+    screen.blit(title_text, (screen_width // 2 - title_text.get_width() // 2, 100))
+    
+    # Botões
+    pygame.draw.rect(screen, SKY_BLUE, button_start)
+    pygame.draw.rect(screen, SKY_BLUE, button_instructions)
+    pygame.draw.rect(screen, SKY_BLUE, button_quit)
+    
+    # Textos nos botões
+    start_text = small_font.render("Iniciar Jogo", True, BLACK)
+    instructions_text = small_font.render("Instruções", True, BLACK)
+    quit_text = small_font.render("Sair", True, BLACK)
+    
+    screen.blit(start_text, (button_start.centerx - start_text.get_width() // 2, button_start.centery - start_text.get_height() // 2))
+    screen.blit(instructions_text, (button_instructions.centerx - instructions_text.get_width() // 2, button_instructions.centery - instructions_text.get_height() // 2))
+    screen.blit(quit_text, (button_quit.centerx - quit_text.get_width() // 2, button_quit.centery - quit_text.get_height() // 2))
+
+# Desenhar instruções
+
+def draw_instructions():
+    screen.fill(WHITE)
+    instructions = [
+        "Instruções do jogo:",
+        "1. Resolva os cálculos antes do tempo acabar.",
+        "2. Use os números no teclado para inserir sua resposta.",
+        "3. Pressione 'Enter' para confirmar.",
+        "4. Evite cometer muitos erros!",
+        "Pressione 'Voltar' para retornar ao menu."
+    ]
+    y = 100
+    for line in instructions:
+        instruction_text = small_font.render(line, True, BLACK)
+        screen.blit(instruction_text, (screen_width // 2 - instruction_text.get_width() // 2, y))
+        y += 50
+    
+    # Botão de voltar
+    button_back = pygame.Rect(screen_width // 2 - 100, 500, 200, 50)
+    pygame.draw.rect(screen, SKY_BLUE, button_back)
+    back_text = small_font.render("Voltar", True, BLACK)
+    screen.blit(back_text, (button_back.centerx - back_text.get_width() // 2, button_back.centery - back_text.get_height() // 2))
+    return button_back
+
+
+
 # Função para exibir a contagem regressiva
 def countdown():
+    global countdown_active
+    countdown_active = True
     for i in range(3):  # Contagem de 1 a 3
         screen.fill(WHITE)
         countdown_text = font.render(str(i + 1), True, BLACK)
@@ -77,6 +136,8 @@ def countdown():
     screen.blit(final_text, (screen_width // 2 - final_text.get_width() // 2, screen_height // 2))
     pygame.display.flip()
     time.sleep(1)
+    
+    countdown_active = False
 
 # Função para gerar um novo cálculo
 def generate_calculation():
@@ -112,28 +173,20 @@ def draw_calculation():
 def rank():
     temp = []
     if accuracy == 100:
-        print("A")
         temp.append('A')
     elif 95 <= accuracy <= 99.99:
-        print("B")
         temp.append('B')
     elif 85 <= accuracy <= 94.99:
-        print("C")
         temp.append('C')
     elif 70 <= accuracy <= 84.99:
-        print("D")
         temp.append('D')
     elif 50 <= accuracy <= 69.99:
-        print("E")
         temp.append('E')
     elif 0 <= accuracy <= 49.99:
-        print("F")
         temp.append('F')
     
     convert = ''.join(temp)
     return convert
-
-
 
 # Função para desenhar a tela de Game Over
 def draw_game_over():
@@ -188,6 +241,7 @@ def reset_game():
     perfect_counter = 0
     good_counter = 0
     bad_counter = 0
+    game_started = True
     generate_calculation()  # Gera um novo cálculo ao reiniciar o jogo
 
 # Função para converter pontuação em moedas
@@ -251,9 +305,7 @@ def estimate_accuracy():
 
 
 
-# Chama a contagem regressiva antes do início do jogo
-countdown()
-game_started = True  # Marca que o jogo foi iniciado
+game_started = False  # Marca que o jogo não foi iniciado
 generate_calculation()
 
 def format_time(seconds):
@@ -270,8 +322,32 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+
+        if in_menu == True:
+            draw_menu()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                if button_start.collidepoint(mouse_pos):  # Botão "Iniciar Jogo"
+                    in_menu = False
+                    countdown()
+                    game_timer = total_game_time
+                    time_left = max_time
+                    game_started = True
+                    reset_game()
+                    generate_calculation()
+                elif button_instructions.collidepoint(mouse_pos):  # Botão "Instruções"
+                    in_menu = "instructions"
+                elif button_quit.collidepoint(mouse_pos):  # Botão "Sair"
+                    running = False
+        elif in_menu == "instructions":
+            button_back = draw_instructions()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                if button_back.collidepoint(mouse_pos):  # Botão "Voltar"
+                    in_menu = True
         
-        if game_over:
+        elif game_over:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:  # Pressione 'R' para reiniciar
                     reset_game()
@@ -332,25 +408,30 @@ while running:
                 else:
                     if event.unicode.isdigit():
                         input_answer += event.unicode
-
-    if not game_over:
-        if game_timer > 0:
-            game_timer -= delta_time
-        else:
-            game_over = True
-        if time_left > 0:
-            time_left -= time_decrease_rate
-        else:
-            errors += 1
-            ball_x += 50
-            balls.append((ball_x, ball_y))
-            if errors >= max_errors:
+    if not countdown_active:
+        if not game_over:
+            if game_timer > 0:
+                game_timer -= delta_time
+            else:
                 game_over = True
-            input_answer = ""
-            generate_calculation()
-            time_left = max_time
+            if time_left > 0:
+                time_left -= time_decrease_rate
+            else:
+                errors += 1
+                ball_x += 50
+                balls.append((ball_x, ball_y))
+                if errors >= max_errors:
+                    game_over = True
+                input_answer = ""
+                generate_calculation()
+                time_left = max_time
+    if in_menu:
+        if in_menu == "instructions":
+            draw_instructions()
+        else:
+            draw_menu()
 
-    if game_over:
+    elif game_over:
         draw_game_over()
         rank()
         
