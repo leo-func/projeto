@@ -347,8 +347,6 @@ def estimate_accuracy():
     return accuracy
 
 
-
-game_started = False  # Marca que o jogo não foi iniciado
 generate_calculation()
 
 def format_time(seconds):
@@ -455,23 +453,24 @@ while running:
                 else:
                     if event.unicode.isdigit():
                         input_answer += event.unicode
-    if not countdown_active:
-        if not game_over:
-            if game_timer > 0:
-                game_timer -= delta_time
-            else:
-                game_over = True
-            if time_left > 0:
-                time_left -= time_decrease_rate
-            else:
-                errors += 1
-                ball_x += 50
-                balls.append((ball_x, ball_y))
-                if errors >= max_errors:
+    if game_started == True:
+        if not countdown_active:
+            if not game_over:
+                if game_timer > 0:
+                    game_timer -= delta_time
+                else:
                     game_over = True
-                input_answer = ""
-                generate_calculation()
-                time_left = max_time
+                if time_left > 0:
+                    time_left -= time_decrease_rate
+                else:
+                    errors += 1
+                    ball_x += 50
+                    balls.append((ball_x, ball_y))
+                    if errors >= max_errors:
+                        game_over = True
+                    input_answer = ""
+                    generate_calculation()
+                    time_left = max_time
     if in_menu:
         if in_menu == "instructions":
             draw_instructions()
