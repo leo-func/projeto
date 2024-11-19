@@ -58,6 +58,10 @@ countdown_active = False
 button_start = pygame.Rect(screen_width // 2 - 100, 200, 200, 50)  # Botão "Iniciar Jogo"
 button_instructions = pygame.Rect(screen_width // 2 - 100, 300, 200, 50)  # Botão "Instruções"
 button_quit = pygame.Rect(screen_width // 2 - 100, 400, 200, 50)  # Botão "Sair"
+button_quit_stage = pygame.Rect(screen_width // 2 - 100, 500, 200, 50)  # Botão "Sair"
+stage_1 = pygame.Rect(screen_width // 2 - 100, 200, 200, 50)
+stage_2 = pygame.Rect(screen_width // 2 - 100, 300, 200, 50)
+stage_3 = pygame.Rect(screen_width // 2 - 100, 400, 200, 50)
 
 
 # Variáveis de controle de erros
@@ -92,6 +96,44 @@ def draw_menu():
     screen.blit(instructions_text, (button_instructions.centerx - instructions_text.get_width() // 2, button_instructions.centery - instructions_text.get_height() // 2))
     screen.blit(quit_text, (button_quit.centerx - quit_text.get_width() // 2, button_quit.centery - quit_text.get_height() // 2))
 
+# Desenhar fases
+
+def draw_stages():
+    screen.fill(WHITE)
+
+    # Título
+
+    title_text = font.render("Fases", True, BLACK)
+    screen.blit(title_text, (screen_width // 2 - title_text.get_width() // 2, 100))
+
+    # Botões
+    pygame.draw.rect(screen, SKY_BLUE, stage_1)
+    pygame.draw.rect(screen, SKY_BLUE, stage_2)
+    pygame.draw.rect(screen, SKY_BLUE, stage_3)
+    pygame.draw.rect(screen, SKY_BLUE, button_quit)
+    
+
+    # Textos nos botões
+
+    stage_1_text = small_font.render("Fase 1", True, BLACK)
+    stage_2_text = small_font.render("Fase 2", True, BLACK)
+    stage_3_text = small_font.render("Fase 3", True, BLACK)
+    
+
+
+    screen.blit(stage_1_text, (stage_1.centerx - stage_1_text.get_width() // 2, stage_1.centery - stage_1_text.get_height() // 2))
+    screen.blit(stage_2_text, (stage_2.centerx - stage_2_text.get_width() // 2, stage_2. centery - stage_2_text.get_height() // 2))
+    screen.blit(stage_3_text, (stage_3.centerx - stage_3_text.get_width() // 2, stage_3.centery - stage_3_text.get_height() // 2))
+
+    button_back = pygame.Rect(screen_width // 2 - 100, 500, 200, 50)
+    pygame.draw.rect(screen, SKY_BLUE, button_back)
+    back_text = small_font.render("Voltar", True, BLACK)
+    screen.blit(back_text, (button_back.centerx - back_text.get_width() // 2, button_back.centery - back_text.get_height() // 2))
+    return button_back
+   
+    
+
+
 # Desenhar instruções
 
 def draw_instructions():
@@ -116,28 +158,6 @@ def draw_instructions():
     back_text = small_font.render("Voltar", True, BLACK)
     screen.blit(back_text, (button_back.centerx - back_text.get_width() // 2, button_back.centery - back_text.get_height() // 2))
     return button_back
-
-
-
-# Função para exibir a contagem regressiva
-def countdown():
-    global countdown_active
-    countdown_active = True
-    for i in range(3):  # Contagem de 1 a 3
-        screen.fill(WHITE)
-        countdown_text = font.render(str(i + 1), True, BLACK)
-        screen.blit(countdown_text, (screen_width // 2 - countdown_text.get_width() // 2, screen_height // 2))
-        pygame.display.flip()
-        time.sleep(1)  # Espera 1 segundo
-
-    # Exibe "GO!"
-    screen.fill(WHITE)
-    final_text = font.render("GO!", True, BLACK)
-    screen.blit(final_text, (screen_width // 2 - final_text.get_width() // 2, screen_height // 2))
-    pygame.display.flip()
-    time.sleep(1)
-    
-    countdown_active = False
 
 # Função para gerar um novo cálculo
 def generate_calculation():
@@ -244,6 +264,29 @@ def reset_game():
     game_started = True
     generate_calculation()  # Gera um novo cálculo ao reiniciar o jogo
 
+# Função para exibir a contagem regressiva
+def countdown():
+    global countdown_active, game_timer
+    countdown_active = True
+    for i in range(3, 0, -1):  # Contagem de 3 a 1
+        screen.fill(WHITE)
+        countdown_text = font.render(str(i), True, BLACK)
+        screen.blit(countdown_text, (screen_width // 2 - countdown_text.get_width() // 2, screen_height // 2))
+        pygame.display.flip()
+        pygame.time.wait(1000)  # Espera 1 segundo
+
+    # Exibe "GO!"
+    screen.fill(WHITE)
+    go_text = font.render("GO!", True, GREEN)
+    screen.blit(go_text, (screen_width // 2 - go_text.get_width() // 2, screen_height // 2))
+    pygame.display.flip()
+    pygame.time.wait(1000)
+    
+    countdown_active = False  # Contagem regressiva concluída
+    total_game_time = 65
+    game_timer = total_game_time
+
+
 # Função para converter pontuação em moedas
 def coin_counter():
     global coins
@@ -322,20 +365,12 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
-
         if in_menu == True:
             draw_menu()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
                 if button_start.collidepoint(mouse_pos):  # Botão "Iniciar Jogo"
-                    in_menu = False
-                    countdown()
-                    game_timer = total_game_time
-                    time_left = max_time
-                    game_started = True
-                    reset_game()
-                    generate_calculation()
+                    in_menu = "stages"
                 elif button_instructions.collidepoint(mouse_pos):  # Botão "Instruções"
                     in_menu = "instructions"
                 elif button_quit.collidepoint(mouse_pos):  # Botão "Sair"
@@ -345,6 +380,18 @@ while running:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
                 if button_back.collidepoint(mouse_pos):  # Botão "Voltar"
+                    in_menu = True
+
+        elif in_menu == "stages":
+            button_back = draw_stages()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                if stage_1.collidepoint(mouse_pos):
+                    countdown()
+                    game_started = True
+                    time_left = max_time
+                    in_menu = False
+                elif button_back.collidepoint(mouse_pos):
                     in_menu = True
         
         elif game_over:
@@ -428,6 +475,9 @@ while running:
     if in_menu:
         if in_menu == "instructions":
             draw_instructions()
+        elif in_menu == "stages":
+            draw_stages()
+    
         else:
             draw_menu()
 
@@ -441,7 +491,6 @@ while running:
 
         # Desenhar cálculo e pontuação
         draw_calculation()
-        coin_counter() 
 
         # Desenhar moedas
         draw_accuracy()
