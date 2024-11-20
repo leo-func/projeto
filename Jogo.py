@@ -53,6 +53,7 @@ clock = pygame.time.Clock()
 in_menu = True
 countdown_active = False
 stage_2_bool = False
+stage_3_bool = True
 
 # Botões
 
@@ -163,11 +164,16 @@ def draw_instructions():
 # Função para gerar um novo cálculo
 def generate_calculation():
     global calculation, correct_answer, num1, num2
-    if stage_2_bool:
+    if stage_3_bool:
         num1 = random.randint(1, 10)
         num2 = random.randint(1, 10)
         calculation = f"{num1} x {num2}"
         correct_answer = num1 * num2
+    if stage_2_bool:
+        num1 = random.randint(1, 10)
+        num2 = random.randint(1, 10)
+        calculation = f"{num1} - {num2}"
+        correct_answer = num1 - num2
     else:
         num1 = random.randint(1, 10)
         num2 = random.randint(1, 10)
@@ -409,8 +415,14 @@ while running:
                     in_menu = False
                     generate_calculation()
                 
-
-
+                elif stage_3.collidepoint(mouse_pos):
+                    countdown()
+                    stage_3_bool = True
+                    game_started = True
+                    time_left = max_time
+                    in_menu = False
+                    generate_calculation()
+                
                 elif button_back.collidepoint(mouse_pos):
                     in_menu = True
         
