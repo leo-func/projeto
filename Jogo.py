@@ -52,6 +52,7 @@ coins = 0
 clock = pygame.time.Clock()
 in_menu = True
 countdown_active = False
+stage_2_bool = False
 
 # Botões
 
@@ -161,11 +162,21 @@ def draw_instructions():
 
 # Função para gerar um novo cálculo
 def generate_calculation():
-    global calculation, correct_answer
-    num1 = random.randint(1, 10)
-    num2 = random.randint(1, 10)
-    calculation = f"{num1} + {num2}"
-    correct_answer = num1 + num2
+    global calculation, correct_answer, num1, num2
+    if stage_2_bool:
+        num1 = random.randint(1, 10)
+        num2 = random.randint(1, 10)
+        calculation = f"{num1} x {num2}"
+        correct_answer = num1 * num2
+    else:
+        num1 = random.randint(1, 10)
+        num2 = random.randint(1, 10)
+        calculation = f"{num1} + {num2}"
+        correct_answer = num1 + num2
+
+
+
+
 
 # Função para desenhar a barra de tempo
 def draw_timer_bar():
@@ -347,7 +358,7 @@ def estimate_accuracy():
     return accuracy
 
 
-generate_calculation()
+
 
 def format_time(seconds):
     minutes = int(seconds // 60)
@@ -389,6 +400,17 @@ while running:
                     game_started = True
                     time_left = max_time
                     in_menu = False
+                    generate_calculation()
+                elif stage_2.collidepoint(mouse_pos):
+                    countdown()
+                    stage_2_bool = True
+                    game_started = True
+                    time_left = max_time
+                    in_menu = False
+                    generate_calculation()
+                
+
+
                 elif button_back.collidepoint(mouse_pos):
                     in_menu = True
         
@@ -476,7 +498,7 @@ while running:
             draw_instructions()
         elif in_menu == "stages":
             draw_stages()
-    
+
         else:
             draw_menu()
 
@@ -487,7 +509,7 @@ while running:
     else:
         # Desenhar barra de tempo
         draw_timer_bar()
-
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
         # Desenhar cálculo e pontuação
         draw_calculation()
 
