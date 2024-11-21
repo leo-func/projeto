@@ -53,21 +53,24 @@ clock = pygame.time.Clock()
 in_menu = True
 countdown_active = False
 stage_2_bool = False
-stage_3_bool = True
+stage_3_bool = False
+infinity_mode_bool = False
+left_reduction = 0
+difficulty = 0
 
 # Botões
 
 button_start = pygame.Rect(screen_width // 2 - 100, 200, 200, 50)  # Botão "Iniciar Jogo"
 button_instructions = pygame.Rect(screen_width // 2 - 100, 300, 200, 50)  # Botão "Instruções"
 button_quit = pygame.Rect(screen_width // 2 - 100, 400, 200, 50)  # Botão "Sair"
-button_quit_stage = pygame.Rect(screen_width // 2 - 100, 500, 200, 50)  # Botão "Sair"
-stage_1 = pygame.Rect(screen_width // 2 - 100, 200, 200, 50)
-stage_2 = pygame.Rect(screen_width // 2 - 100, 300, 200, 50)
-stage_3 = pygame.Rect(screen_width // 2 - 100, 400, 200, 50)
-
+button_quit_stage = pygame.Rect(screen_width // 2 - 100, 500, 200, 50)  # Botão "Sair" em fases
+stage_1 = pygame.Rect(screen_width // 2 - 100, 100, 200, 50)
+stage_2 = pygame.Rect(screen_width // 2 - 100, 200, 200, 50)
+stage_3 = pygame.Rect(screen_width // 2 - 100, 300, 200, 50)
+infinity_mode = pygame.Rect(screen_width // 2 - 100, 400, 200, 50)
 
 # Variáveis de controle de erros
-max_errors = 3
+max_errors = 10
 errors = 0
 balls = []  # Lista para armazenar as posições das bolas
 
@@ -106,13 +109,13 @@ def draw_stages():
     # Título
 
     title_text = font.render("Fases", True, BLACK)
-    screen.blit(title_text, (screen_width // 2 - title_text.get_width() // 2, 100))
+    screen.blit(title_text, (screen_width // 2 - title_text.get_width() // 2, 30))
 
     # Botões
     pygame.draw.rect(screen, SKY_BLUE, stage_1)
     pygame.draw.rect(screen, SKY_BLUE, stage_2)
     pygame.draw.rect(screen, SKY_BLUE, stage_3)
-    pygame.draw.rect(screen, SKY_BLUE, button_quit)
+    pygame.draw.rect(screen, SKY_BLUE, infinity_mode)
     
 
     # Textos nos botões
@@ -120,12 +123,14 @@ def draw_stages():
     stage_1_text = small_font.render("Fase 1", True, BLACK)
     stage_2_text = small_font.render("Fase 2", True, BLACK)
     stage_3_text = small_font.render("Fase 3", True, BLACK)
+    infinity_mode_text = small_font.render("Modo infinito", True, BLACK)
     
 
 
     screen.blit(stage_1_text, (stage_1.centerx - stage_1_text.get_width() // 2, stage_1.centery - stage_1_text.get_height() // 2))
     screen.blit(stage_2_text, (stage_2.centerx - stage_2_text.get_width() // 2, stage_2. centery - stage_2_text.get_height() // 2))
     screen.blit(stage_3_text, (stage_3.centerx - stage_3_text.get_width() // 2, stage_3.centery - stage_3_text.get_height() // 2))
+    screen.blit(infinity_mode_text, (infinity_mode.centerx - infinity_mode_text.get_width() // 2, infinity_mode.centery - infinity_mode_text.get_height() // 2))
 
     button_back = pygame.Rect(screen_width // 2 - 100, 500, 200, 50)
     pygame.draw.rect(screen, SKY_BLUE, button_back)
@@ -169,7 +174,7 @@ def generate_calculation():
         num2 = random.randint(1, 10)
         calculation = f"{num1} x {num2}"
         correct_answer = num1 * num2
-    if stage_2_bool:
+    elif stage_2_bool:
         num1 = random.randint(1, 10)
         num2 = random.randint(1, 10)
         calculation = f"{num1} - {num2}"
@@ -194,6 +199,12 @@ def draw_timer_bar():
     pygame.draw.rect(screen, RED, (bar_x, bar_y, bar_width // 4, bar_height))
     pygame.draw.rect(screen, GREEN, (bar_x + 1.5 * (bar_width // 3), bar_y, bar_width // 2.0, bar_height))
     pygame.draw.rect(screen, YELLOW, (yellow_x, bar_y, 5, bar_height))  # Atualiza a posição da linha amarela
+
+def draw_life_bar():
+    pygame.draw.rect(screen, RED, ((bar_x + 530) + left_reduction, bar_y - 440, bar_width // 4 - left_reduction, bar_height - 15))
+
+
+    
 
 # Função para desenhar o cálculo e a pontuação
 def draw_calculation():
@@ -264,7 +275,7 @@ def draw_game_over():
 
 # Função para reiniciar o jogo
 def reset_game():
-    global score, time_left, input_answer, errors, game_over, balls, ball_x, fade_time, game_timer, total_game_time, coins, perfect_counter, good_counter, bad_counter
+    global score, time_left, input_answer, errors, game_over, balls, ball_x, fade_time, game_timer, total_game_time, coins, perfect_counter, good_counter, bad_counter, left_reduction
     score = 0
     time_left = max_time
     input_answer = ""
@@ -279,6 +290,7 @@ def reset_game():
     good_counter = 0
     bad_counter = 0
     game_started = True
+    left_reduction = 0
     generate_calculation()  # Gera um novo cálculo ao reiniciar o jogo
 
 # Função para exibir a contagem regressiva
@@ -316,15 +328,13 @@ def draw_accuracy():
     acurracy_text = small_font.render(f"{acurracy:.2f} %", True, BLACK)
     screen.blit(acurracy_text, (10, 50))
 
-# Função para desenhar as bolas de erro
-def draw_balls():
-    for ball in balls:
-        pygame.draw.circle(screen, RED, ball, 20)
 
 # Função para verificar se a entrada é um número inteiro
 def is_valid_int(input_string):
+    if input_string in ("+", "-"):  # Permite apenas sinais sem números temporariamente
+        return True
     try:
-        int(input_string)
+        int(input_string)  # Tenta converter para inteiro
         return True
     except ValueError:
         return False
@@ -422,7 +432,12 @@ while running:
                     time_left = max_time
                     in_menu = False
                     generate_calculation()
-                
+                elif infinity_mode.collidepoint(mouse_pos):
+                    countdown()
+                    infinity_mode_bool = True
+                    game_started = True
+                    in_menu = False
+                    
                 elif button_back.collidepoint(mouse_pos):
                     in_menu = True
         
@@ -472,16 +487,19 @@ while running:
 
                         else:
                             errors += 1
-                            ball_x += 50  # Incrementa 50 pixels no deslocamento horizontal da bola
-                            balls.append((ball_x, ball_y))  # Cria a bola na nova posição
-                            if errors >= max_errors:
+                            left_reduction += 20
+                            left_reduction = min(left_reduction, bar_width // 2)
+                            if left_reduction == 160:
                                 game_over = True
+                                  
                         input_answer = ""  # Limpa a resposta do jogador
                         time_left = max_time
                         generate_calculation()
                     else:
                         pass
-
+                elif event.unicode.isdigit() or event.unicode in "+-":  # Apenas números ou sinais
+                    if is_valid_int(input_answer + event.unicode):  # Valida a entrada acumulada
+                        input_answer += event.unicode                
                 elif event.key == pygame.K_BACKSPACE:
                     input_answer = input_answer[:-1]
                 else:
@@ -498,9 +516,8 @@ while running:
                     time_left -= time_decrease_rate
                 else:
                     errors += 1
-                    ball_x += 50
-                    balls.append((ball_x, ball_y))
-                    if errors >= max_errors:
+                    left_reduction += 20
+                    if left_reduction == 160:
                         game_over = True
                     input_answer = ""
                     generate_calculation()
@@ -528,8 +545,8 @@ while running:
         # Desenhar moedas
         draw_accuracy()
 
-        # Desenhar as bolas
-        draw_balls()
+        # Desenhar barra de vida
+        draw_life_bar()
 
         # Fade
         apply_opacity()
