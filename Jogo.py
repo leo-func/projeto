@@ -57,6 +57,7 @@ stage_3_bool = False
 infinity_mode_bool = False
 left_reduction = 0
 difficulty = 0
+operacoes = ["+", "-", "*", "/"]
 
 # Botões
 
@@ -179,13 +180,33 @@ def generate_calculation():
         num2 = random.randint(1, 10)
         calculation = f"{num1} - {num2}"
         correct_answer = num1 - num2
+    elif infinity_mode_bool:
+
+        if difficulty <= 15:
+            num1 = random.randint(1, 10)
+            num2 = random.randint(1, 10)
+            calculation = f"{num1} + {num2}"
+            correct_answer = num1 + num2
+        elif 15 <= difficulty < 30:
+            operacoes = ["+", "-"]
+            operacao = random.choice(operacoes)
+            num1 = random.randint(1, 10)
+            num2 = random.randint(1, 10)
+            calculation = f"{num1} {operacao} {num2}"
+            correct_answer = eval(calculation)  # Eval executa a string como expressão Python
+        elif difficulty >= 30:
+            operacoes = ["+", "-", "*"]
+            operacao = random.choice(operacoes)
+            num1 = random.randint(1, 10)
+            num2 = random.randint(1, 10)
+            calculation = f"{num1} {operacao} {num2}"
+            correct_answer = eval(calculation)  # Eval executa a string como expressão Python
+
     else:
         num1 = random.randint(1, 10)
         num2 = random.randint(1, 10)
         calculation = f"{num1} + {num2}"
         correct_answer = num1 + num2
-
-
 
 
 
@@ -275,7 +296,7 @@ def draw_game_over():
 
 # Função para reiniciar o jogo
 def reset_game():
-    global score, time_left, input_answer, errors, game_over, balls, ball_x, fade_time, game_timer, total_game_time, coins, perfect_counter, good_counter, bad_counter, left_reduction
+    global score, time_left, input_answer, errors, game_over, balls, ball_x, fade_time, game_timer, total_game_time, coins, perfect_counter, good_counter, bad_counter, left_reduction, difficulty
     score = 0
     time_left = max_time
     input_answer = ""
@@ -291,6 +312,7 @@ def reset_game():
     bad_counter = 0
     game_started = True
     left_reduction = 0
+    difficulty = 0
     generate_calculation()  # Gera um novo cálculo ao reiniciar o jogo
 
 # Função para exibir a contagem regressiva
@@ -436,7 +458,9 @@ while running:
                     countdown()
                     infinity_mode_bool = True
                     game_started = True
+                    game_timer = 9999999999999999
                     in_menu = False
+                    generate_calculation()
                     
                 elif button_back.collidepoint(mouse_pos):
                     in_menu = True
@@ -454,6 +478,8 @@ while running:
                         pass
                     elif is_valid_int(input_answer):
                         if int(input_answer) == correct_answer:
+                            difficulty += 1
+                            print(difficulty)
                             if time_left > max_time / 2:
                                 score += 15
                                 perfect_text = font.render("Perfeito!", True, GREEN)
@@ -552,9 +578,10 @@ while running:
         apply_opacity()
 
         # Exibir o tempo restante global no formato "0:00"
-        formatted_timer = format_time(game_timer)
-        timer_text = small_font.render(f"Tempo restante: {formatted_timer}", True, BLACK)
-        screen.blit(timer_text, (screen_width - timer_text.get_width() - 10, 10))
+        if not infinity_mode_bool:
+            formatted_timer = format_time(game_timer)
+            timer_text = small_font.render(f"Tempo restante: {formatted_timer}", True, BLACK)
+            screen.blit(timer_text, (screen_width - timer_text.get_width() - 10, 10))
 
     # Atualizar a tela
     pygame.display.flip()
