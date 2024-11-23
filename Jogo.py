@@ -55,6 +55,14 @@ countdown_active = False
 stage_2_bool = False
 stage_3_bool = False
 infinity_mode_bool = False
+fade_surface = pygame.Surface((screen_width, screen_height))
+fade_surface.fill(BLACK)  # Cor do fade
+fade_alpha = 255  # Começa opaco
+fade_speed = 5  # Velocidade do fade
+fading_in = False
+fading_out = False
+fade_delay = 1000  # 1 segundo
+fade_end_time = 0
 left_reduction = 0
 difficulty = 0
 operacoes = ["+", "-", "*", "/"]
@@ -68,19 +76,18 @@ button_quit_stage = pygame.Rect(screen_width // 2 - 100, 500, 200, 50)  # Botão
 stage_1 = pygame.Rect(screen_width // 2 - 100, 100, 200, 50)
 stage_2 = pygame.Rect(screen_width // 2 - 100, 200, 200, 50)
 stage_3 = pygame.Rect(screen_width // 2 - 100, 300, 200, 50)
-infinity_mode = pygame.Rect(screen_width // 2 - 100, 400, 200, 50)
+infinity_mode = pygame.Rect(screen_width // 2 - 100, 300, 200, 50)
+normal_mode = pygame.Rect(screen_width // 2 - 100, 400 // 2, 200, 50)
 
 # Variáveis de controle de erros
 max_errors = 10
 errors = 0
-balls = []  # Lista para armazenar as posições das bolas
 
 # Estado do jogo
 game_started = False
 game_over = False
 
 # Desenhar menu
-
 def draw_menu():
     screen.fill(WHITE)
     
@@ -102,8 +109,29 @@ def draw_menu():
     screen.blit(instructions_text, (button_instructions.centerx - instructions_text.get_width() // 2, button_instructions.centery - instructions_text.get_height() // 2))
     screen.blit(quit_text, (button_quit.centerx - quit_text.get_width() // 2, button_quit.centery - quit_text.get_height() // 2))
 
-# Desenhar fases
+# Desenhar modos
+def draw_modes():
+    title_text = font.render("Modos", True, BLACK)
+    screen.blit(title_text, (screen_width // 2 - title_text.get_width() // 2, 30))
 
+    # Botões
+    pygame.draw.rect(screen, SKY_BLUE, normal_mode)
+    pygame.draw.rect(screen, SKY_BLUE, infinity_mode)
+  
+
+    normal_mode_text = small_font.render("Modo normal", True, BLACK)
+    infinity_mode_text = small_font.render("Modo infinito", True, BLACK)
+
+    screen.blit(normal_mode_text, (normal_mode.centerx - normal_mode_text.get_width() // 2, normal_mode.centery - normal_mode_text.get_height() // 2))
+    screen.blit(infinity_mode_text, (infinity_mode.centerx - infinity_mode_text.get_width() // 2, infinity_mode.centery - infinity_mode_text.get_height() // 2))
+
+    button_back = pygame.Rect(screen_width // 2 - 100, 500, 200, 50)
+    pygame.draw.rect(screen, SKY_BLUE, button_back)
+    back_text = small_font.render("Voltar", True, BLACK)
+    screen.blit(back_text, (button_back.centerx - back_text.get_width() // 2, button_back.centery - back_text.get_height() // 2))
+    return button_back
+
+# Desenhar fases
 def draw_stages():
     screen.fill(WHITE)
 
@@ -124,14 +152,12 @@ def draw_stages():
     stage_1_text = small_font.render("Fase 1", True, BLACK)
     stage_2_text = small_font.render("Fase 2", True, BLACK)
     stage_3_text = small_font.render("Fase 3", True, BLACK)
-    infinity_mode_text = small_font.render("Modo infinito", True, BLACK)
     
 
 
     screen.blit(stage_1_text, (stage_1.centerx - stage_1_text.get_width() // 2, stage_1.centery - stage_1_text.get_height() // 2))
     screen.blit(stage_2_text, (stage_2.centerx - stage_2_text.get_width() // 2, stage_2. centery - stage_2_text.get_height() // 2))
     screen.blit(stage_3_text, (stage_3.centerx - stage_3_text.get_width() // 2, stage_3.centery - stage_3_text.get_height() // 2))
-    screen.blit(infinity_mode_text, (infinity_mode.centerx - infinity_mode_text.get_width() // 2, infinity_mode.centery - infinity_mode_text.get_height() // 2))
 
     button_back = pygame.Rect(screen_width // 2 - 100, 500, 200, 50)
     pygame.draw.rect(screen, SKY_BLUE, button_back)
@@ -139,11 +165,7 @@ def draw_stages():
     screen.blit(back_text, (button_back.centerx - back_text.get_width() // 2, button_back.centery - back_text.get_height() // 2))
     return button_back
    
-    
-
-
 # Desenhar instruções
-
 def draw_instructions():
     screen.fill(WHITE)
     instructions = [
@@ -208,8 +230,6 @@ def generate_calculation():
         calculation = f"{num1} + {num2}"
         correct_answer = num1 + num2
 
-
-
 # Função para desenhar a barra de tempo
 def draw_timer_bar():
     # Calcula a posição da linha amarela com base no tempo restante
@@ -221,11 +241,9 @@ def draw_timer_bar():
     pygame.draw.rect(screen, GREEN, (bar_x + 1.5 * (bar_width // 3), bar_y, bar_width // 2.0, bar_height))
     pygame.draw.rect(screen, YELLOW, (yellow_x, bar_y, 5, bar_height))  # Atualiza a posição da linha amarela
 
+# Função para desenhar a barra de vida
 def draw_life_bar():
     pygame.draw.rect(screen, RED, ((bar_x + 530) + left_reduction, bar_y - 440, bar_width // 4 - left_reduction, bar_height - 15))
-
-
-    
 
 # Função para desenhar o cálculo e a pontuação
 def draw_calculation():
@@ -337,7 +355,6 @@ def countdown():
     total_game_time = 65
     game_timer = total_game_time
 
-
 # Função para converter pontuação em moedas
 def coin_counter():
     global coins
@@ -350,10 +367,9 @@ def draw_accuracy():
     acurracy_text = small_font.render(f"{acurracy:.2f} %", True, BLACK)
     screen.blit(acurracy_text, (10, 50))
 
-
 # Função para verificar se a entrada é um número inteiro
 def is_valid_int(input_string):
-    if input_string in ("+", "-"):  # Permite apenas sinais sem números temporariamente
+    if input_string in ("+", "-", ","):  # Permite apenas sinais sem números temporariamente
         return True
     try:
         int(input_string)  # Tenta converter para inteiro
@@ -380,6 +396,44 @@ def apply_opacity():
     else:
         fade_time = 0
 
+# Fade in e out na tela
+# Função para iniciar o fade
+def start_fade_in():
+    global fade_alpha, fading_in, fading_out
+    fade_alpha = 255
+    fading_in = True
+    fading_out = False
+
+def start_fade_out():
+    global fade_alpha, fading_in, fading_out, game_started
+    fade_alpha = 0
+    fading_out = True
+    fading_in = False
+    if fade_alpha == 255:
+        game_started = True
+    else:
+        game_started = False
+
+# Função para aplicar o fade
+def apply_fade():
+    global fade_alpha, fading_in, fading_out, game_started
+    if fading_in:
+        fade_alpha -= fade_speed
+        if fade_alpha <= 0:
+            fade_alpha = 0
+            fading_in = False  # Termina o fade in
+            game_started = True
+
+    elif fading_out:
+        fade_alpha += fade_speed
+        if fade_alpha >= 255:
+            fade_alpha = 255
+            fading_out = False  # Termina o fade out
+
+    # Aplicar a transparência à superfície
+    fade_surface.set_alpha(fade_alpha)
+    screen.blit(fade_surface, (0, 0))
+
 # Função para contar a precisão
 def estimate_accuracy():
     total_answers = perfect_counter + good_counter + bad_counter + errors
@@ -395,9 +449,7 @@ def estimate_accuracy():
         accuracy = 0
     return accuracy
 
-
-
-
+# Função para formatar o tempo em "0:00"
 def format_time(seconds):
     minutes = int(seconds // 60)
     seconds = int(seconds % 60)
@@ -417,7 +469,7 @@ while running:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
                 if button_start.collidepoint(mouse_pos):  # Botão "Iniciar Jogo"
-                    in_menu = "stages"
+                    in_menu = "modes"
                 elif button_instructions.collidepoint(mouse_pos):  # Botão "Instruções"
                     in_menu = "instructions"
                 elif button_quit.collidepoint(mouse_pos):  # Botão "Sair"
@@ -429,42 +481,51 @@ while running:
                 if button_back.collidepoint(mouse_pos):  # Botão "Voltar"
                     in_menu = True
 
+        elif in_menu == "modes":
+            button_back = draw_modes()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                if button_back.collidepoint(mouse_pos):
+                    in_menu = True
+                elif infinity_mode.collidepoint(mouse_pos):
+                    game_started = False
+                    start_fade_out()
+                    start_fade_in()
+                    infinity_mode_bool = True
+                    game_timer = 9999999999999999
+                    in_menu = False
+                    generate_calculation()
+                elif normal_mode.collidepoint(mouse_pos):
+                    in_menu = "stages"
         elif in_menu == "stages":
             button_back = draw_stages()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
-                if stage_1.collidepoint(mouse_pos):
-                    countdown()
-                    game_started = True
+                if button_back.collidepoint(mouse_pos):
+                    in_menu = "modes"
+                elif stage_1.collidepoint(mouse_pos):
+                    game_started = False
+                    start_fade_out()
+                    start_fade_in()
                     time_left = max_time
                     in_menu = False
                     generate_calculation()
                 elif stage_2.collidepoint(mouse_pos):
-                    countdown()
+                    game_started = False
                     stage_2_bool = True
-                    game_started = True
+                    start_fade_out()
+                    start_fade_in()
                     time_left = max_time
                     in_menu = False
                     generate_calculation()
-                
                 elif stage_3.collidepoint(mouse_pos):
-                    countdown()
                     stage_3_bool = True
-                    game_started = True
+                    game_started = False
+                    start_fade_out()
+                    start_fade_in()
                     time_left = max_time
                     in_menu = False
-                    generate_calculation()
-                elif infinity_mode.collidepoint(mouse_pos):
-                    countdown()
-                    infinity_mode_bool = True
-                    game_started = True
-                    game_timer = 9999999999999999
-                    in_menu = False
-                    generate_calculation()
-                    
-                elif button_back.collidepoint(mouse_pos):
-                    in_menu = True
-        
+                    generate_calculation()           
         elif game_over:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:  # Pressione 'R' para reiniciar
@@ -553,6 +614,8 @@ while running:
             draw_instructions()
         elif in_menu == "stages":
             draw_stages()
+        elif in_menu == "modes":
+            draw_modes()
 
         else:
             draw_menu()
@@ -576,6 +639,8 @@ while running:
 
         # Fade
         apply_opacity()
+
+        apply_fade()
 
         # Exibir o tempo restante global no formato "0:00"
         if not infinity_mode_bool:
