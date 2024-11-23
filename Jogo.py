@@ -55,6 +55,7 @@ countdown_active = False
 stage_2_bool = False
 stage_3_bool = False
 infinity_mode_bool = False
+back_to_menu = False
 fade_surface = pygame.Surface((screen_width, screen_height))
 fade_surface.fill(BLACK)  # Cor do fade
 fade_alpha = 255  # Começa opaco
@@ -78,6 +79,7 @@ stage_2 = pygame.Rect(screen_width // 2 - 100, 200, 200, 50)
 stage_3 = pygame.Rect(screen_width // 2 - 100, 300, 200, 50)
 infinity_mode = pygame.Rect(screen_width // 2 - 100, 300, 200, 50)
 normal_mode = pygame.Rect(screen_width // 2 - 100, 400 // 2, 200, 50)
+resume_button = pygame.Rect(screen_width // 2 - 100, 300, 200, 50)
 
 # Variáveis de controle de erros
 max_errors = 10
@@ -128,6 +130,26 @@ def draw_modes():
     button_back = pygame.Rect(screen_width // 2 - 100, 500, 200, 50)
     pygame.draw.rect(screen, SKY_BLUE, button_back)
     back_text = small_font.render("Voltar", True, BLACK)
+    screen.blit(back_text, (button_back.centerx - back_text.get_width() // 2, button_back.centery - back_text.get_height() // 2))
+    return button_back
+
+
+def draw_game_paused():
+    screen.fill(BLACK)
+    title_text = font.render("Jogo Pausado", True, BLACK)
+    screen.blit(title_text, (screen_width // 2 - title_text.get_width() // 2, 30))
+
+    # Botões
+    pygame.draw.rect(screen, SKY_BLUE, resume_button)
+  
+
+    resume_text = small_font.render("Continuar", True, BLACK)
+
+    screen.blit(resume_text, (resume_button.centerx - resume_text.get_width() // 2, resume_button.centery - resume_text.get_height() // 2))
+
+    button_back = pygame.Rect(screen_width // 2 - 100, 200, 200, 50)
+    pygame.draw.rect(screen, SKY_BLUE, button_back)
+    back_text = small_font.render("Voltar ao menu", True, BLACK)
     screen.blit(back_text, (button_back.centerx - back_text.get_width() // 2, button_back.centery - back_text.get_height() // 2))
     return button_back
 
@@ -409,10 +431,6 @@ def start_fade_out():
     fade_alpha = 0
     fading_out = True
     fading_in = False
-    if fade_alpha == 255:
-        game_started = True
-    else:
-        game_started = False
 
 # Função para aplicar o fade
 def apply_fade():
@@ -433,6 +451,15 @@ def apply_fade():
     # Aplicar a transparência à superfície
     fade_surface.set_alpha(fade_alpha)
     screen.blit(fade_surface, (0, 0))
+
+# Função para resetar o estado do fase
+def reset_game_states():
+    global infinity_mode_bool, stage_2_bool, stage_3_bool, back_to_menu, game_started
+    infinity_mode_bool = False
+    stage_2_bool = False
+    stage_3_bool = False
+    back_to_menu = False
+    game_started = False
 
 # Função para contar a precisão
 def estimate_accuracy():
@@ -465,6 +492,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if in_menu == True:
+            game_started = False
             draw_menu()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
@@ -474,6 +502,7 @@ while running:
                     in_menu = "instructions"
                 elif button_quit.collidepoint(mouse_pos):  # Botão "Sair"
                     running = False
+
         elif in_menu == "instructions":
             button_back = draw_instructions()
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -488,6 +517,7 @@ while running:
                 if button_back.collidepoint(mouse_pos):
                     in_menu = True
                 elif infinity_mode.collidepoint(mouse_pos):
+                    reset_game_states()
                     game_started = False
                     start_fade_out()
                     start_fade_in()
@@ -497,6 +527,7 @@ while running:
                     generate_calculation()
                 elif normal_mode.collidepoint(mouse_pos):
                     in_menu = "stages"
+        
         elif in_menu == "stages":
             button_back = draw_stages()
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -504,6 +535,7 @@ while running:
                 if button_back.collidepoint(mouse_pos):
                     in_menu = "modes"
                 elif stage_1.collidepoint(mouse_pos):
+                    reset_game_states()
                     game_started = False
                     start_fade_out()
                     start_fade_in()
@@ -511,6 +543,7 @@ while running:
                     in_menu = False
                     generate_calculation()
                 elif stage_2.collidepoint(mouse_pos):
+                    reset_game_states()
                     game_started = False
                     stage_2_bool = True
                     start_fade_out()
@@ -519,13 +552,15 @@ while running:
                     in_menu = False
                     generate_calculation()
                 elif stage_3.collidepoint(mouse_pos):
+                    reset_game_states()
                     stage_3_bool = True
                     game_started = False
                     start_fade_out()
                     start_fade_in()
                     time_left = max_time
                     in_menu = False
-                    generate_calculation()           
+                    generate_calculation()        
+        
         elif game_over:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:  # Pressione 'R' para reiniciar
@@ -577,11 +612,12 @@ while running:
                             left_reduction += 20
                             left_reduction = min(left_reduction, bar_width // 2)
                             if left_reduction == 160:
-                                game_over = True
+                                game_over = True  
                                   
                         input_answer = ""  # Limpa a resposta do jogador
                         time_left = max_time
                         generate_calculation()
+            
                     else:
                         pass
                 elif event.unicode.isdigit() or event.unicode in "+-":  # Apenas números ou sinais
@@ -592,6 +628,10 @@ while running:
                 else:
                     if event.unicode.isdigit():
                         input_answer += event.unicode
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    game_started = False
+                    in_menu = "modes" 
     if game_started == True:
         if not countdown_active:
             if not game_over:
@@ -616,7 +656,6 @@ while running:
             draw_stages()
         elif in_menu == "modes":
             draw_modes()
-
         else:
             draw_menu()
 
